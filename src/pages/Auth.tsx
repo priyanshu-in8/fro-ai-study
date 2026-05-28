@@ -12,6 +12,7 @@ import {
   EyeOff,
   ArrowRight,
 } from "lucide-react";
+import { GoogleLogin } from "@react-oauth/google";
 import { useToast } from "@/hooks/use-toast";
 
 const Auth = () => {
@@ -291,6 +292,7 @@ const Auth = () => {
                 className="w-full px-4 py-2.5 rounded-lg bg-muted/30 border border-border text-sm outline-none"
                 required
               />
+
             )}
 
             <button
@@ -300,6 +302,7 @@ const Auth = () => {
               }
               className="w-full py-2.5 px-4 rounded-lg bg-gradient-to-r from-neon-blue to-neon-violet text-white font-semibold flex items-center justify-center gap-2 disabled:opacity-50"
             >
+              
               {loading ? (
                 <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               ) : (
@@ -312,6 +315,61 @@ const Auth = () => {
               )}
             </button>
           </form>
+          <div className="my-4 flex justify-center">
+  <GoogleLogin
+    onSuccess={async (
+      credentialResponse
+    ) => {
+      try {
+        setLoading(true);
+
+        const result =
+          await authApi.googleLogin(
+            credentialResponse.credential
+          );
+
+        setAuth(
+          result.token,
+          result.user
+        );
+
+        toast({
+          title:
+            "Google login successful!",
+          description: `Welcome ${
+            result.user?.name ||
+            ""
+          }`,
+        });
+
+        navigate("/", {
+          replace: true,
+        });
+
+      } catch (error: any) {
+        toast({
+          variant:
+            "destructive",
+          title:
+            "Google Login Failed",
+          description:
+            error.message,
+        });
+      } finally {
+        setLoading(false);
+      }
+    }}
+    onError={() => {
+      toast({
+        variant:
+          "destructive",
+        title: "Error",
+        description:
+          "Google Sign-In failed",
+      });
+    }}
+  />
+</div>
 
           <p className="text-xs text-center mt-4 text-muted-foreground">
             {isLogin

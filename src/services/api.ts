@@ -230,6 +230,19 @@ export const authApi = {
         }
       );
     },
+    googleLogin: async (
+  token: string
+): Promise<AuthResponse> => {
+  return await request(
+    "/auth/google",
+    {
+      method: "POST",
+      body: JSON.stringify({
+        token,
+      }),
+    }
+  );
+},
 
   resetPassword:
     async (
@@ -481,6 +494,46 @@ export const studyPlanApi = {
         {
           method:
             "PATCH",
+        }
+      );
+    },
+
+  generateShortTermPlan:
+    async (
+      goal: string,
+      level: string,
+      duration: string
+    ) => {
+      return await request(
+        "/ai/generate-short-term-plan",
+        {
+          method:
+            "POST",
+          body: JSON.stringify({
+            goal,
+            level,
+            duration,
+          }),
+        }
+      );
+    },
+
+  generateLongTermPlan:
+    async (
+      goal: string,
+      level: string,
+      duration: string
+    ) => {
+      return await request(
+        "/ai/generate-long-term-plan",
+        {
+          method:
+            "POST",
+          body: JSON.stringify({
+            goal,
+            level,
+            duration,
+          }),
         }
       );
     },
