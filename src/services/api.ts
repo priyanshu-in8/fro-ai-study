@@ -501,8 +501,8 @@ export const studyPlanApi = {
   generateShortTermPlan:
     async (
       goal: string,
-      level: string,
-      duration: string
+      duration: string,
+      level: string
     ) => {
       return await request(
         "/ai/generate-short-term-plan",
@@ -510,10 +510,11 @@ export const studyPlanApi = {
           method:
             "POST",
           body: JSON.stringify({
-            goal,
-            level,
-            duration,
-          }),
+  goal,
+  days: Number(duration),
+  hoursPerDay: 3,
+  level,
+}),
         }
       );
     },
@@ -522,18 +523,18 @@ export const studyPlanApi = {
     async (
       goal: string,
       level: string,
-      duration: string
+      duration: string,
     ) => {
       return await request(
         "/ai/generate-long-term-plan",
         {
           method:
             "POST",
-          body: JSON.stringify({
-            goal,
-            level,
-            duration,
-          }),
+         body: JSON.stringify({
+  goal,
+  days: duration,
+  level,
+}),
         }
       );
     },

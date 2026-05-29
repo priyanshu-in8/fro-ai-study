@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import type { ComponentType, SVGProps } from "react";
 import { motion } from "framer-motion";
 import {
   Calendar,
@@ -16,6 +17,7 @@ import {
   TrendingUp,
   Flame,
   ChevronDown,
+  
 } from "lucide-react";
 
 import { studyPlanApi } from "@/services/api";
@@ -77,7 +79,7 @@ type ShortTermPlan = {
   topics: Day[];
 };
 
-const iconMap: Record<string, any> = {
+const iconMap: Record<string, ComponentType<SVGProps<SVGSVGElement>>> = {
   maths: Calculator,
   mathematics: Calculator,
   physics: FlaskConical,
@@ -141,6 +143,10 @@ const Planner = () => {
     useState("today");
 
   const [searchQuery, setSearchQuery] = useState("");
+  const [duration, setDuration] = useState("30");
+  const [level, setLevel] = useState("beginner");
+  const [planType, setPlanType] = useState("short");
+
   
   const [generating, setGenerating] = useState(false);
 
@@ -179,17 +185,32 @@ const Planner = () => {
   };
 
   const handleGeneratePlan = async () => {
-    if (!searchQuery.trim()) return;
+    if (!searchQuery.trim() && !duration) return;
     setGenerating(true);
+    console.log("Generating plan with:", { searchQuery, level, duration, planType });
     try {
-      const res = await studyPlanApi.generateLongTermPlan(
-        searchQuery,
-        "beginner",
-        "30"
-      );
-      if (res?.data) {
-        setLongTermPlan(res.data);
-        setActiveTab("long");
+      if (planType === "short") {
+        const res = await studyPlanApi.generateShortTermPlan(
+          searchQuery,
+          duration,
+          level,
+        );
+        if (res?.data) {
+          setShortTermPlan(res.data);
+          console.log("Short-term plan generated:", res.data);
+          setActiveTab("short");
+        }
+      } else {
+        console.log("Generating long-term plan with:", { searchQuery, level, duration });
+        const res = await studyPlanApi.generateLongTermPlan(
+          searchQuery,
+          level,
+          duration,
+        );
+        if (res?.data) {
+          setLongTermPlan(res.data);
+          setActiveTab("long");
+        }
       }
     } catch (error) {
       console.error("Generate plan failed:", error);
@@ -255,15 +276,27 @@ const Planner = () => {
         {/* Search & Generate Plan */}
         <div className="glass p-4 rounded-xl mb-4">
           <div className="flex flex-col sm:flex-row gap-3">
-            <div className="flex-1 relative">
+            <div className="flex flexdirection-row w-full ">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search or enter learning goal (e.g., Machine Learning, Semiconductors)..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyPress={(e) => e.key === "Enter" && handleGeneratePlan()}
-                className="pl-10 bg-background/50"
+                onKeyPress={(e) => e.key === "Enter" }
+                className="pl-10 bg-background/50 w-full "
               />
+              <Input 
+                type="number"
+                placeholder="time duration in days"
+                value={duration}
+                onChange={(e) => setDuration(e.target.value)}
+                onKeyPress={(e) => e.key === "Enter" && handleGeneratePlan()}
+                className="pl-10 bg-background/50 w-full "
+              />
+              <select className="pl-4 bg-background/50 text-white w-45 h- whitespace-nowrap rounded-md border border-gray-600" name="type" id="type" onChange={(e) => setPlanType(e.target.value)}>
+              <option  value="short">shortTermPlan</option>
+              <option  value="long">longTermPlan</option>
+              </select>
             </div>
             <Button
               onClick={handleGeneratePlan}
