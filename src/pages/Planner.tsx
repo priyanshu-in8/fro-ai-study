@@ -146,6 +146,7 @@ const Planner = () => {
   const [duration, setDuration] = useState("30");
   const [level, setLevel] = useState("beginner");
   const [planType, setPlanType] = useState("short");
+  const [storePlan, setStorePlan] = useState(null);
 
   
   const [generating, setGenerating] = useState(false);
@@ -170,9 +171,12 @@ const Planner = () => {
       try {
         const res = await studyPlanApi.getPlans();
         if (res?.data && Array.isArray(res.data)) {
-          setLongTermPlan(res.data[0]);
+          setLongTermPlan(res.data[0].datalongTermPlan);
         } else if (res?.data) {
           setLongTermPlan(res.data);
+          setShortTermPlan(res.data.shortTermPlan);
+
+       
         }
       } catch (error) {
         console.log("Long-term plan not available");
@@ -210,6 +214,7 @@ const Planner = () => {
         if (res?.data) {
           setLongTermPlan(res.data);
           setActiveTab("long");
+          console.log("Long-term plan generated:", res.data);
         }
       }
     } catch (error) {
@@ -357,7 +362,7 @@ const Planner = () => {
                   <div>
                     <p className="text-xs text-muted-foreground mb-1">Duration</p>
                     <p className="text-2xl font-bold text-neon-violet">
-                      {longTermPlan?.duration || shortTermPlan?.duration || "N/A"}
+                      {longTermPlan?.duration || shortTermPlan?.duration  || longTermPlan?.longTermPlan?.totalDays ||"N/A"}
                     </p>
                   </div>
                   <Flame className="h-8 w-8 text-neon-violet opacity-50" />
@@ -471,7 +476,7 @@ const Planner = () => {
                       </h2>
                     </div>
                     <p className="text-sm text-muted-foreground mb-4">
-                      Goal: {shortTermPlan.goal} • Level: {shortTermPlan.level}
+                      Goal: {shortTermPlan.goal } • Level: {shortTermPlan.level}
                     </p>
                     <p className="text-sm text-muted-foreground">
                       Duration: {shortTermPlan.duration}
@@ -546,19 +551,19 @@ const Planner = () => {
                       </h2>
                     </div>
                     <p className="text-sm text-muted-foreground mb-2">
-                      Goal: {longTermPlan.goal}
+                      Goal: {longTermPlan.goal|| longTermPlan.longTermPlan?.goal || "N/A"}
                     </p>
                     <p className="text-sm text-muted-foreground mb-2">
-                      Level: {longTermPlan.level}
+                      Level: {longTermPlan.level|| "Medium"}
                     </p>
                     <p className="text-sm text-neon-green font-medium">
-                      Total Duration: {longTermPlan.duration}
+                      Total Duration: {longTermPlan.duration|| longTermPlan.longTermPlan?.totalDays || "N/A"}
                     </p>
                   </div>
 
                   {/* Month Accordions */}
                   <Accordion type="single" collapsible defaultValue="month-0">
-                    {longTermPlan.months?.map((month, monthIdx) => (
+                    {longTermPlan.longTermPlan.roadmap.months.map((month, monthIdx) => (
                       <AccordionItem
                         key={monthIdx}
                         value={`month-${monthIdx}`}

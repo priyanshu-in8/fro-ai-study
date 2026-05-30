@@ -473,7 +473,7 @@ export const studyPlanApi = {
   getPlans:
     async () => {
       return await request(
-        "/ai/study-plans"
+        "/ai/latest-plans"
       );
     },
 
