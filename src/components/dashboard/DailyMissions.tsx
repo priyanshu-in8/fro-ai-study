@@ -3,17 +3,19 @@
 // ===================================
 
 import { useEffect, useState } from "react";
-import { missionApi } from "@/services/api";
+import {  missionApi,studyPlanApi } from "@/services/api";
 
 export function DailyMissions() {
   const [missions, setMissions] =
     useState<any[]>([]);
 
   const loadData = async () => {
-    const res =
-      await missionApi.getMissions();
+   const res = await studyPlanApi.getTodayPlan();
 
-    setMissions(res.missions);
+    setMissions(res?.data?.activities || []);
+    console.log(res?.data?.activities
+    );
+
   };
 
   useEffect(() => {

@@ -32,6 +32,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
 type TodayPlan = {
+  focusArea: ReactNode;
+  shortTermTopic: ReactNode;
+  longTermTopic: ReactNode;
   title: string;
   day: number;
   focus: string;
@@ -163,6 +166,7 @@ const Planner = () => {
       try {
         const res = await studyPlanApi.getTodayPlan();
         setTodayPlan(res?.data || null);
+        console.log("Today's plan fetched:", res?.data?.activities);
       } catch (error) {
         console.log("Today plan not available");
       }
@@ -240,24 +244,58 @@ const Planner = () => {
     }
   };
 
-  const schedule = todayPlan?.tasks?.map(
-    (task, index) => {
-      const subject = detectSubject(
-        `${todayPlan.focus} ${task}`
-      );
+  const schedule = (() => {
+    if (!todayPlan) return [];
 
-      const Icon = iconMap[subject] || BookOpen;
+    // Prefer new shape: activities array (from API), fall back to old tasks: string[]
+    const activities = (todayPlan as any).activities;
+    if (Array.isArray(activities) && activities.length) {
+      return activities.map((act: any, idx: number) => {
+        const title = act.title || act.name || act.topic || "";
+        const subject = detectSubject(`${todayPlan.focus || ""} ${title} ${act.type || ""}`);
+        const Icon = iconMap[subject] || BookOpen;
 
-      return {
-        time: `${9 + index}:00 ${index < 3 ? "AM" : "PM"}`,
-        subject: subject.toUpperCase(),
-        topic: task,
-        duration:
-          task.length > 70 ? "45 min" : "30 min",
-        icon: Icon,
-      };
+        // Simple time slot assignment: start at 9:00 and increment by index
+        const hour = 9 + idx;
+        const meridiem = hour < 12 ? "AM" : "PM";
+        const displayHour = hour <= 12 ? hour : hour - 12;
+
+        // Normalize duration display
+        const duration =
+          typeof act.duration === "number"
+            ? `${act.duration} min`
+            : typeof act.duration === "string"
+            ? act.duration
+            : title.length > 70
+            ? "45 min"
+            : "30 min";
+
+        return {
+          time: `${displayHour}:00 ${meridiem}`,
+          subject: subject.toUpperCase(),
+          topic: title,
+          duration,
+          icon: Icon,
+        };
+      });
     }
-  ) || [];
+
+    // Fallback for older shape: tasks is array of strings
+    return (
+      todayPlan.tasks?.map((task: string, index: number) => {
+        const subject = detectSubject(`${todayPlan.focus} ${task}`);
+        const Icon = iconMap[subject] || BookOpen;
+
+        return {
+          time: `${9 + index}:00 ${index < 3 ? "AM" : "PM"}`,
+          subject: subject.toUpperCase(),
+          topic: task,
+          duration: task.length > 70 ? "45 min" : "30 min",
+          icon: Icon,
+        };
+      }) || []
+    );
+  })();
 
   return (
     <div className="min-h-screen bg-background p-4 sm:p-6 lg:p-8 pb-24 md:pb-8">
@@ -396,12 +434,13 @@ const Planner = () => {
                   <div className="flex items-center gap-2 mb-4">
                     <Sparkles className="h-4 w-4 text-neon-violet" />
                     <h3 className="text-sm font-semibold text-foreground">
-                      {todayPlan.title || "Today's Schedule"}
+                      {todayPlan.longTermTopic + " and " + todayPlan.shortTermTopic || "Today's Schedule"
+ }
                     </h3>
                   </div>
 
                   <p className="text-xs text-muted-foreground mb-4">
-                    Day {todayPlan.day} • {todayPlan.focus}
+                    Day {todayPlan.day} • {todayPlan.focusArea}
                   </p>
 
                   {schedule.length === 0 && (

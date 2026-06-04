@@ -223,12 +223,7 @@ const Index = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <StudyPlanCards
-                todayPlan={
-                  todayPlan
-                }
-                plans={plans}
-              />
+              
 
               <AIInsightsCard
                 dashboard={
@@ -237,7 +232,7 @@ const Index = () => {
               />
             </div>
 
-            <Achievements />
+            {/* <Achievements /> */}
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <FocusMode />
