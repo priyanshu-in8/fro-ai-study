@@ -49,9 +49,10 @@ const App = () => (
             />
 
             <Route
- path="/generate-plan"
- element={<GeneratePlan />}
-/>
+              path="/generate-plan"
+              element={<GeneratePlan />}
+            />
+
 
             <Route
               path="/verify-email"
@@ -79,6 +80,14 @@ const App = () => (
 
             <Route
               path="/practice"
+              element={
+                <ProtectedRoute>
+                  <Practice />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/practice/:type/:topic"
               element={
                 <ProtectedRoute>
                   <Practice />

@@ -480,23 +480,21 @@ export const studyPlanApi = {
   getTodayPlan:
     async () => {
       return await request(
-        "/ai/today-plan"
+        "/ai/saved-today-plan"
       );
     },
 
-  completeDay:
-    async (
-      planId: string,
-      dayNumber: number
-    ) => {
-      return await request(
-        `/ai/study-plan/${planId}/${dayNumber}`,
-        {
-          method:
-            "PATCH",
-        }
-      );
-    },
+
+completeMission:
+  async (id: string) => {
+
+    return await request(
+      `/missions/${id}/complete`,
+      {
+        method: "PATCH",
+      }
+    );
+  },
 
   generateShortTermPlan:
     async (
@@ -557,7 +555,7 @@ export const missionApi = {
       id: string
     ) => {
       return await request(
-        `/auth/missions/${id}`,
+        `/ai/missions/${id}`,
         {
           method:
             "PATCH",

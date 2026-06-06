@@ -5,6 +5,9 @@ import { Brain, Zap, Code, Flame, Crown, ChevronRight, Play, CheckCircle2, XCirc
 import { aiApi, quizApi } from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "postcss";
+import {
+  useParams,
+} from "react-router-dom";
 
 const defaultQuestions = [
   { question: "What is the time complexity of binary search?", options: ["O(n)", "O(log n)", "O(n²)", "O(1)"], correct: 1, explanation: "Binary search halves the search space, resulting in O(log n)." },
@@ -114,10 +117,10 @@ function QuizSection({ generatedQuiz, currentQ, selected, score, finished, combo
               disabled={selected !== null}
               className={`w-full p-4 rounded-lg text-left font-medium transition-all ${
                 selected === index
-                  ? index === currentQuestion.correct
+                  ? index === currentQuestion.correctAnswer
                     ? "bg-green-500/20 border-2 border-green-500"
                     : "bg-red-500/20 border-2 border-red-500"
-                  : selected !== null && index === currentQuestion.correct
+                  : selected !== null && index === currentQuestion.correctAnswer
                   ? "bg-green-500/20 border-2 border-green-500"
                   : "glass hover:bg-muted/50 border-2 border-transparent"
               }`}
@@ -125,7 +128,7 @@ function QuizSection({ generatedQuiz, currentQ, selected, score, finished, combo
               <div className="flex items-center justify-between">
                 <span>{option}</span>
                 {selected === index && (selected === currentQuestion.correct ? <CheckCircle2 className="h-5 w-5 text-green-500" /> : <XCircle className="h-5 w-5 text-red-500" />)}
-                {selected !== null && index === currentQuestion.correct && selected !== index && <CheckCircle2 className="h-5 w-5 text-green-500" />}
+                {selected !== null && index === currentQuestion.correctAnswer && selected !== index && <CheckCircle2 className="h-5 w-5 text-green-500" />}
               </div>
             </motion.button>
           ))}
@@ -147,15 +150,34 @@ function QuizSection({ generatedQuiz, currentQ, selected, score, finished, combo
   );
 }
 
-function FlashcardsSection({ onXpGain }: { onXpGain: (amount: number) => void }) {
+function FlashcardsSection({
+  onXpGain,
+  initialTopic,
+}: {
+  onXpGain: (amount: number) => void;
+  initialTopic?: string;
+}) {
  const [cards, setCards] = useState<any[]>([]);
-const [topic, setTopic] = useState("");
+const [topic, setTopic] =
+  useState(initialTopic || "");
 const [loading, setLoading] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [knownCount, setKnownCount] = useState(0);
   const { toast } = useToast();
    const [generated, setGenerated] = useState(false);
+   useEffect(() => {
+
+  if (
+    initialTopic &&
+    !generated
+  ) {
+
+    handleGenerateFlashcards();
+
+  }
+
+}, [initialTopic]);
 
 
 const handleGenerateFlashcards = async () => {
@@ -258,7 +280,15 @@ type TestCase = {
   expectedOutput: string;
 };
 
-function CodingSection({ onXpGain }: { onXpGain: (amount: number) => void }) {
+function CodingSection({
+  onXpGain,
+  initialTopic,
+}: {
+  onXpGain: (
+    amount: number
+  ) => void;
+  initialTopic?: string;
+}){
   const [topic, setTopic] = useState("");
   const [language, setLanguage] = useState("C++");
   const [code, setCode] = useState("# Write your solution here\n");
@@ -274,6 +304,30 @@ const [testCases, setTestCases] = useState<TestCase[]>([]);
 
   const [correct, setCorrect] = useState("");
   const [summary, setSummary] = useState("")
+
+  useEffect(() => {
+
+  if (initialTopic) {
+
+    setTopic(
+      initialTopic
+    );
+
+  }
+
+}, [initialTopic]);
+useEffect(() => {
+
+  if (
+    topic &&
+    !generated
+  ) {
+
+    handleGenerateCode();
+
+  }
+
+}, [topic]);
 
 
 
@@ -509,7 +563,7 @@ const handleRun = async () => {
 }
 
 export default function Practice() {
-  const [activeTab, setActiveTab] = useState<"quiz" | "flashcards" | "coding">("quiz");
+  const [activeTab, setActiveTab] = useState<"quiz" | "flashcard" | "coding">("quiz");
   const [userStats, setUserStats] = useState({ xp: 0, level: 1, streak: 0 });
   const [xpGain, setXpGain] = useState<number | null>(null);
 
@@ -525,6 +579,72 @@ export default function Practice() {
   const [aiError, setAiError] = useState<string | null>(null);
 
   const { toast } = useToast();
+  const {
+    type,
+    topic: urlTopic,
+  } = useParams();
+  useEffect(() => {
+
+  if (!type) return;
+
+  if (
+    type === "quiz" ||
+    type === "coding" ||
+    type === "flashcard"
+  ) {
+
+    setActiveTab(type);
+
+  }
+
+  if (urlTopic) {
+
+    setTopic(
+      decodeURIComponent(urlTopic)
+    );
+
+
+    
+
+  }
+
+
+  if(type === "quiz"){
+    setTopic(
+      decodeURIComponent(urlTopic));
+
+  }
+  if(type === "coding"){
+    setTopic(
+      decodeURIComponent(urlTopic));
+
+  }
+  if( type === "flashcard"){
+     setTopic(
+      decodeURIComponent(urlTopic));
+  }
+
+
+
+
+
+
+
+
+}, [type, urlTopic]);
+useEffect(() => {
+
+  if (
+    activeTab === "quiz" &&
+    topic &&
+    !generatedQuiz
+  ) {
+
+    handleGenerateQuiz();
+
+  }
+
+}, [activeTab, topic]);
 
   useEffect(() => {
     if (!finished && selected === null && activeTab === "quiz" && timeLeft > 0) {
@@ -544,7 +664,7 @@ export default function Practice() {
     setLoadingAI(true);
     setAiError(null);
     try {
-      const data = await quizApi.generateQuiz(topic, 5);
+      const data = await quizApi.generateQuiz(topic, 25);
       setGeneratedQuiz(data.data);
       setCurrentQ(0);
       setSelected(null);
@@ -599,7 +719,7 @@ export default function Practice() {
 
   const tabs = [
     { id: "quiz" as const, label: "Quiz", icon: Brain },
-    { id: "flashcards" as const, label: "Flashcards", icon: BookOpen },
+    { id: "flashcard" as const, label: "Flashcards", icon: BookOpen },
     { id: "coding" as const, label: "Coding", icon: Code },
   ];
 
@@ -653,14 +773,20 @@ export default function Practice() {
             )}
           </motion.div>
         )}
-        {activeTab === "flashcards" && (
-          <motion.div key="flashcards" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}>
-            <FlashcardsSection onXpGain={handleXpGain} />
+        {activeTab === "flashcard" && (
+          <motion.div key="flashcard" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}>
+           <FlashcardsSection
+  onXpGain={handleXpGain}
+  initialTopic={topic}
+/>
           </motion.div>
         )}
         {activeTab === "coding" && (
           <motion.div key="coding" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}>
-            <CodingSection onXpGain={handleXpGain} />
+            <CodingSection
+  onXpGain={handleXpGain}
+  initialTopic={topic}
+/>
           </motion.div>
         )}
       </AnimatePresence>
